@@ -1,65 +1,85 @@
+import axios from 'axios';
 import React from 'react';
 
 class CreatePersonForm extends React.Component {
     state = {
         person: {
-            name: '',
-            lastname: '',
-            city: {},
-            id: ''
+            FirstName: '',
+            LastName: '',
+            CityId: 0,
+            PhoneNr: '',
+            SocialSecurityNr: '',
+            LanguageIds: [1]
         },
         countries: [
             { 
                 name: 'sweden', cities: [
                 {
-                    name: 'göteborg'
+                    name: 'göteborg',
+                    id: 7
                 },
                 {
-                    name: 'stockholm'
+                    name: 'stockholm',
+                    id: 2
                 },
                 {
-                    name: 'malmö'
+                    name: 'malmö',
+                    id: 3
                 }
             ]
         },
         { 
             name: 'canada', cities: [
             {
-                name: 'toronto'
+                name: 'toronto',
+                id: 22
+                
             },
             {
-                name: 'ottowa'
+                name: 'ottowa',
+                id: 11
             }
         ]
     },{ 
         name: 'germany', cities: [
         {
-            name: 'berlin'
+            name: 'berlin',
+            id: 33
         },
         {
-            name: 'frankfurt'
+            name: 'frankfurt',
+            id: 44
         }
     ]
         } 
     ]
     }
-  
     cities = this.state.countries.flatMap(c => c.cities)
     componentDidMount(){
-        this.setState(({person: {...this.state.person, city: this.cities[0]}}))
+        this.setState(({person: {...this.state.person, CityId: this.cities[0].id}}))
     }
     render() {
-        return (<form onSubmit={ev => { ev.preventDefault(); this.props.handleSubmit(this.state.person) }}> 
-                <input value={this.state.person.name} 
-                onChange={event => {this.setState({person: {...this.state.person, name: event.target.value }})}}
+        return (<form onSubmit={ev => 
+        { ev.preventDefault(); this.props.handleSubmit(this.state.person) }}> 
+                <input value={this.state.person.FirstName} 
+                onChange={event => {
+                    this.setState({person: {...this.state.person, FirstName: event.target.value }})}}
                 type="text" required/>
-                <input value={this.state.person.lastname} onChange={event => {this.setState({ person: {...this.state.person, lastname: event.target.value}})}}
+                <input value={this.state.person.LastName} onChange={event => {
+                    this.setState({ person: {...this.state.person, LastName: event.target.value}})}}
+                type="text"/>
+                <input value={this.state.person.PhoneNr} onChange={event => {
+                    this.setState({ person: {...this.state.person, PhoneNr: event.target.value}})}}
+                type="text"/>
+                <input value={this.state.person.SocialSecurityNr} onChange={event => {
+                    this.setState({ person: {...this.state.person, SocialSecurityNr: event.target.value}})}}
                 type="text"/>
                 <select id="cities" name="cities" type="text"
-                defaultValue={this.cities[0]} onChange={event => { console.log(this.cities[event.target.value]); console.log(event.target.value); this.setState({person: {...this.state.person, city: this.cities[event.target.value] }})}} 
+                defaultValue={this.cities[0].id} onChange={event => { 
+                    this.setState({person: {...this.state.person, CityId: parseInt(event.target.value)}})}} 
                 >
                     {
-                    this.cities.map((c, index) => <option value={index} key={c.name}>{c.name}</option>  ) 
+                    this.cities.map(c => <option value={c.id} key={c.name}>{c.name}</option>  ) 
                     }
                 </select>
               
@@ -89,8 +109,8 @@ class Person extends React.Component {
     }
     render() { return (
         <tr>
-            <td>{this.person.name}</td>
-            <td>{this.person.lastname}</td>
+            <td>{this.person.firstName}</td>
+            <td>{this.person.lastName}</td>
            
             <td>
                 <button onClick={() => this.setShowDetails(!this.state.showDetails)}>Show details</button>
@@ -128,31 +148,36 @@ export default class People extends React.Component {
     state = {
         showCreateForm: false,
         people: [
-            {
-                name: "test",
-                lastname: "testsson",
-                city: { name: "testcity"},
-                id: "45453"
-            },
-            {
-                name: "atest2",
-                lastname: "testsson2",
-                city: { name: "testcity2"},
-                id: "34534"
-            },
-            {
-                name: "btest3",
-                lastname: "testsson3",
-                city: { name: "testcity3"},
-                id: "08982"
-            }
+            
         ],
     };
+    componentDidMount(){
+        axios.get(`https://localhost:44350/react/people`)
+        .then(r => {
+            console.log(r.data.people)
+            this.setState({ people: r.data.people });
+          
+        })
+        .catch(e => {
+            console.log(e)
+        });
+    }
     addNewPerson = (person) => {
-        //add check?
-        person.id = Math.ceil(Math.random() * 100);
-        console.log(person)
-        this.setState(oldState => ({ people: [...oldState.people, person]}))
+
+        let json = JSON.stringify(person)
+        axios.post(`https://localhost:44350/react/people`, json,
+        { headers: {
+            'Content-Type': 'application/json'
+            } 
+        }
+        )
+        .then(r => {
+            this.setState(oldState => ({ people: [...oldState.people, r.data]}))
+        })
+        .catch(e => {
+            console.log(e)
+        });
+      
     }
     removePerson = (person) => {
         this.setState(oldState => ({ people: oldState.people.filter(p => p.id !== person.id)}))
