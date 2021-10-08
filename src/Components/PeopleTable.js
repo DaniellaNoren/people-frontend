@@ -1,6 +1,8 @@
 import axios from 'axios';
 import React from 'react';
 
+const url =  window.location.href;
+
 class CreatePersonForm extends React.Component {
     state = {
         person: {
@@ -11,52 +13,20 @@ class CreatePersonForm extends React.Component {
             SocialSecurityNr: '',
             LanguageIds: [1]
         },
-        countries: [
-            { 
-                name: 'sweden', cities: [
-                {
-                    name: 'göteborg',
-                    id: 7
-                },
-                {
-                    name: 'stockholm',
-                    id: 2
-                },
-                {
-                    name: 'malmö',
-                    id: 3
-                }
-            ]
-        },
-        { 
-            name: 'canada', cities: [
-            {
-                name: 'toronto',
-                id: 22
-                
-            },
-            {
-                name: 'ottowa',
-                id: 11
-            }
-        ]
-    },{ 
-        name: 'germany', cities: [
-        {
-            name: 'berlin',
-            id: 33
-        },
-        {
-            name: 'frankfurt',
-            id: 44
-        }
-    ]
-        } 
-    ]
+        countries: [],
+        cities: []
     }
-    cities = this.state.countries.flatMap(c => c.cities)
+    
     componentDidMount(){
-        this.setState(({person: {...this.state.person, CityId: this.cities[0].id}}))
+        axios.get(`${url}/countries`)
+        .then(r => {
+            this.setState({ countries: r.data.countries });
+            this.setState({ cities: r.data.countries.flatMap(c => c.cities)})
+            this.setState(({person: {...this.state.person, CityId: r.data.countries[0].cities[0].id}}))
+        })
+        .catch(e => {
+            console.log(e)
+        });
     }
     render() {
         return (<form onSubmit={ev => 
@@ -75,11 +45,11 @@ class CreatePersonForm extends React.Component {
                     this.setState({ person: {...this.state.person, SocialSecurityNr: event.target.value}})}}
                 type="text"/>
                 <select id="cities" name="cities" type="text"
-                defaultValue={this.cities[0].id} onChange={event => { 
+                defaultValue={0} onChange={event => { 
                     this.setState({person: {...this.state.person, CityId: parseInt(event.target.value)}})}} 
                 >
                     {
-                    this.cities.map(c => <option value={c.id} key={c.name}>{c.name}</option>  ) 
+                    this.state.cities.map(c => <option value={c.id} key={c.name}>{c.name}</option>  ) 
                     }
                 </select>
               
@@ -152,7 +122,7 @@ export default class People extends React.Component {
         ],
     };
     componentDidMount(){
-        axios.get(`https://localhost:44350/react/people`)
+        axios.get(`${url}/people`)
         .then(r => {
             this.setState({ people: r.data.people });
         })
@@ -163,7 +133,7 @@ export default class People extends React.Component {
     addNewPerson = (person) => {
 
         let json = JSON.stringify(person)
-        axios.post(`https://localhost:44350/react/people`, json,
+        axios.post(`${url}/people`, json,
         { headers: {
             'Content-Type': 'application/json'
             } 
@@ -178,9 +148,9 @@ export default class People extends React.Component {
       
     }
     removePerson = (person) => {
-        axios.delete(`https://localhost:44350/react/people/${person.id}`)
+        axios.delete(`${url}/people/${person.id}`)
         .then(r => {
-            if(r.status == 200){
+            if(r.status === 200){
                 this.setState(oldState => ({ people: oldState.people.filter(p => p.id !== person.id)}))
             }
         })
@@ -191,14 +161,15 @@ export default class People extends React.Component {
     sortPeopleByName = () => { 
         this.setState(oldState => ({people: oldState.people.sort((p1, p2) => 
             { 
-                if(p1.name < p2.name) return -1; 
-                else if(p2.name < p1.name) return 1; 
+                if(p1.firstName < p2.firstName) return -1; 
+                else if(p2.firstName < p1.firstName) return 1; 
                 return 0; })
             }))
     }
     render(){
        return( 
        <div>
+          
            <button onClick={this.sortPeopleByName}>SORT BY NAME</button>
            <Table deletePersonFunction={this.removePerson} people={this.state.people}/>
        <button onClick={() => this.setState(oldState => ({showCreateForm: !oldState.showCreateForm}))}>Create person</button>
