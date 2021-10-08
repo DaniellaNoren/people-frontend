@@ -154,9 +154,7 @@ export default class People extends React.Component {
     componentDidMount(){
         axios.get(`https://localhost:44350/react/people`)
         .then(r => {
-            console.log(r.data.people)
             this.setState({ people: r.data.people });
-          
         })
         .catch(e => {
             console.log(e)
@@ -180,7 +178,15 @@ export default class People extends React.Component {
       
     }
     removePerson = (person) => {
-        this.setState(oldState => ({ people: oldState.people.filter(p => p.id !== person.id)}))
+        axios.delete(`https://localhost:44350/react/people/${person.id}`)
+        .then(r => {
+            if(r.status == 200){
+                this.setState(oldState => ({ people: oldState.people.filter(p => p.id !== person.id)}))
+            }
+        })
+        .catch(e => {
+            console.log(e)
+        });
     }
     sortPeopleByName = () => { 
         this.setState(oldState => ({people: oldState.people.sort((p1, p2) => 
