@@ -1,7 +1,10 @@
 import axios from 'axios';
 import React from 'react';
+import 'bootstrap/dist/css/bootstrap.css';
+import { CSSTransition } from 'react-transition-group';
+import '../index.css';
 
-const url =  window.location.href;
+const url = window.location.href;
 
 class CreatePersonForm extends React.Component {
     state = {
@@ -21,7 +24,6 @@ class CreatePersonForm extends React.Component {
     async componentDidMount(){
         await axios.get(`${url}/countries`)
         .then(r => {
-
             this.setState({ countries: r.data.countries });
         }).then(() => {
             this.setState({ cities: this.state.countries.flatMap(c => c.cities)})
@@ -41,22 +43,44 @@ class CreatePersonForm extends React.Component {
             })
     }
     render() {
-        return (<form onSubmit={ev => 
-        { ev.preventDefault(); this.props.handleSubmit(this.state.person) }}> 
-                <input value={this.state.person.FirstName} 
+        return (
+       <div className="bg-light d-flex justify-content-center m-2"> 
+        <form onSubmit={ev => 
+            { ev.preventDefault(); this.props.handleSubmit(this.state.person) }}
+            className="create-person-form"> 
+
+            <div className="form-group">
+                <label for="FirstName">Firstname:</label>
+                <input className="form-control" id="FirstName" value={this.state.person.FirstName} 
                 onChange={event => {
                     this.setState({person: {...this.state.person, FirstName: event.target.value }})}}
                 type="text" required/>
-                <input value={this.state.person.LastName} onChange={event => {
+            </div>
+
+            <div className="form-group">
+                <label for="LastName">Lastname:</label>
+                <input className="form-control" value={this.state.person.LastName} onChange={event => {
                     this.setState({ person: {...this.state.person, LastName: event.target.value}})}}
-                type="text"/>
-                <input value={this.state.person.PhoneNr} onChange={event => {
+                type="text" id="LastName"/>
+            </div>
+
+            <div className="form-group">
+                <label for="PhoneNr">Phone:</label>
+                <input className="form-control" value={this.state.person.PhoneNr} onChange={event => {
                     this.setState({ person: {...this.state.person, PhoneNr: event.target.value}})}}
-                type="text"/>
-                <input value={this.state.person.SocialSecurityNr} onChange={event => {
+                    type="text" id="PhoneNr"/>
+            </div>
+
+            <div className="form-group">
+                <label for="SSN">SSN:</label>
+                <input className="form-control" value={this.state.person.SocialSecurityNr} onChange={event => {
                     this.setState({ person: {...this.state.person, SocialSecurityNr: event.target.value}})}}
-                type="text"/>
-                <select id="cities" name="cities" type="text"
+                type="text" id="SSN"/>
+            </div>
+
+            <div className="form-group">
+                <label for="City">City:</label>
+                <select className="form-control" id="city" name="cities" type="text"
                 defaultValue={0} onChange={event => { 
                     this.setState({person: {...this.state.person, CityId: parseInt(event.target.value)}})}} 
                 >
@@ -64,73 +88,101 @@ class CreatePersonForm extends React.Component {
                     this.state.cities.map(c => <option value={c.id} key={c.name}>{c.name}</option>  ) 
                     }
                 </select>
-                <select multiple={true} id="languages" name="languages" type="text"
+            </div>
+
+            <div className="form-group">
+                <label for="Languages">Languages:</label>
+                <select className="form-control" multiple={true} name="languages" type="text"
                 defaultValue={[]} onChange={event => { 
                     this.setState({person: {...this.state.person, LanguageIds: [...this.state.person.LanguageIds, parseInt(event.target.value)]}})}} 
-                >
-                    {
+                id="languages">
+                {
                     this.state.languages.map(l => <option value={l.id} key={l.id}>{l.languageName}</option>  ) 
-                    }
+                }
                 </select>
+            </div>
               
-                <button>Create person</button>
-        </form>)
+            <button className="mt-3 ml-5 btn btn-primary">Create</button>
+
+        </form>
+    </div>
+    )
     }
 }
 
-const PersonDetails = ({person, deletePersonFunction}) => {
+const PersonDetails = ({person, deletePersonFunction, hideDetails}) => {
  return (
-     <div>
-        {person.city.name}
-        {person.socialSecurityNr}
-        {person.phoneNr}
-         <button onClick={() => deletePersonFunction(person)}>DELETE</button>
-     
-     </div>
+        <div className="row">
+         <button onClick={() => hideDetails(false)} className="col-lg-1 mt-3 ml-5 btn btn-primary">Hide details</button>
+         <table className="table">
+             <thead>
+                 <tr>
+                     <th>City</th>
+                     <th>SSN</th>
+                     <th>Phone</th>
+                     <th>Action</th>
+                 </tr>
+             </thead>
+            <tbody>
+                <tr>
+                    <td> {person.city.name}</td>
+                    <td>{person.socialSecurityNr}</td>
+                    <td>{person.phoneNr}</td> 
+                    <td> <button onClick={() => deletePersonFunction(person)} 
+                            className="btn btn-warning">DELETE</button> 
+                    </td>
+                </tr>
+            </tbody>
+         </table>     
+        </div>
  )
 }
 
-class Person extends React.Component {
-    state = {
-        showDetails: false
-    };
-    person = this.props.person;
-    setShowDetails = (val) => {
-        this.setState({showDetails: val})
-    }
-    render() { return (
+function Person({person, deletePersonFunction}){
+    const [showDetails, setShowDetails] = React.useState(false); 
+    
+    return (
         <tr>
-            <td>{this.person.firstName}</td>
-            <td>{this.person.lastName}</td>
-           
-            <td>
-                <button onClick={() => this.setShowDetails(!this.state.showDetails)}>Show details</button>
-            </td>
-            
-                { this.state.showDetails ?
-                    <td>
-                        <PersonDetails person={this.person} deletePersonFunction={this.props.deletePersonFunction}/>
-                    </td>
-                : null
+            <td colspan={showDetails ? 1 : 2}>{person.firstName}</td>
+            <td colspan={showDetails ? 1 : 2}>{person.lastName}</td>
+        
+            <CSSTransition
+                in={showDetails}
+                timeout={500}
+                classNames="people">
+
+            <td colspan={4} className="details">
+                { 
+                showDetails ?
+                <PersonDetails person={person} deletePersonFunction={deletePersonFunction} 
+                hideDetails={val => setShowDetails(val)}/> 
+                : 
+                <button className="btn btn-primary" 
+                    onClick={() => setShowDetails(true)}>
+                    { showDetails ?  'Hide details' : 'Show details' }
+                </button>
                 }
+            </td>
+    
+            </CSSTransition>
            
         </tr>
     )
 }
-}
+
+
 
 const Table = ({people, deletePersonFunction}) => {
     return (
-        <table>
-            <thead>
+        <table className="table">
+            <thead className="thead-dark">
             <tr>
-                <th>Name</th>
-                <th>Lastname</th>
-                <th>City</th>
+                <th colspan={2}>Name</th>
+                <th colspan={2}>Lastname</th>
             </tr>
             </thead>
             <tbody>
-            {people.map(p => <Person deletePersonFunction={deletePersonFunction} key={p.id} person={p}/>)}   
+                {people.map(p => <Person deletePersonFunction={deletePersonFunction} key={p.id} person={p}/>)}   
             </tbody>
         </table>
     );
@@ -196,15 +248,23 @@ export default class People extends React.Component {
     render(){
        return( 
        <div>
-          
-           <button onClick={this.sortPeopleByName}>SORT BY NAME</button>
-           <Table deletePersonFunction={this.removePerson} people={this.state.people}/>
-       <button onClick={() => this.setState(oldState => ({showCreateForm: !oldState.showCreateForm}))}>Create person</button>
-       {
-           this.state.showCreateForm ?
-                    <CreatePersonForm handleSubmit={this.addNewPerson}/>
-                    : null
-       }
-       </div>)
+            <div className="row">
+                <button className="col-lg-1 mt-3 ml-5 btn btn-primary sort-btn" onClick={this.sortPeopleByName}>SORT BY NAME</button>
+            </div>
+
+            <Table deletePersonFunction={this.removePerson} people={this.state.people}/>
+
+            <button onClick={() => this.setState(oldState => ({showCreateForm: !oldState.showCreateForm}))} 
+            className="btn btn-primary">
+            {
+                this.state.showCreateForm ? 'Hide' : 'Create person' 
+            }
+           </button>
+
+            {
+           this.state.showCreateForm ? <CreatePersonForm handleSubmit={this.addNewPerson}/> : null
+            }
+       </div>
+       )
     }
 }

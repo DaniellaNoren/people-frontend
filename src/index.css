@@ -11,3 +11,30 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+.create-person-form{
+  width: 60%;
+}
+.sort-btn{
+  margin: 1em;
+  margin-top: 2em;
+}
+.details{
+  max-width: 25%;
+}
+.people-enter {
+  opacity: 0.01;
+}
+
+.people-enter.people-enter-active {
+  opacity: 1;
+  transition: 500ms;
+}
+
+.people-exit {
+  opacity: 1;
+}
+
+.people-exit.people-exit-active {
+  opacity: 0.01;
+  transition: 500ms;
+}
