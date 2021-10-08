@@ -176,8 +176,8 @@ function Person({person, deletePersonFunction}){
         <tr>
            
             <td colspan={showDetails ? 1 : 2}>{person.firstName}</td>
-            <td colspan={showDetails ? 1 : 2}>{person.lastName}</td> )
-                    :
+            <td colspan={showDetails ? 1 : 2}>{person.lastName}</td> 
+                    
             <CSSTransition
                 in={showDetails}
                 timeout={500}
