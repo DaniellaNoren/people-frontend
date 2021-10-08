@@ -8,6 +8,8 @@ const url = window.location.href;
 
 class CreatePersonForm extends React.Component {
     state = {
+        showWarning: false,
+        warning: '',
         person: {
             FirstName: '',
             LastName: '',
@@ -20,7 +22,30 @@ class CreatePersonForm extends React.Component {
         cities: [],
         languages: []
     }
-    
+    checkPerson(){
+        const regex = new RegExp('[a-zA-Z]')
+
+        if(this.state.person.FirstName === '' || this.state.person.LastName === ''){
+            this.setState({showWarning: true, warning: 'Name has to be filled in'})
+            return;
+        }
+            
+        if(regex.test(this.state.person.PhoneNr)){
+            this.setState({showWarning: true, warning: 'Invalid phonenumber'})
+            return;
+        }     
+        if(regex.test(this.state.person.SocialSecurityNr) || 
+            this.state.person.SocialSecurityNr.length < 10 || 
+            this.state.person.SocialSecurityNr.length > 12 ){
+
+            this.setState({showWarning: true, warning: 'Invalid SNN'})
+            return;
+        }
+        this.setState({showWarning: false, warning: ''})
+
+        this.props.handleSubmit(this.state.person)
+        
+    }
     async componentDidMount(){
         await axios.get(`${url}/countries`)
         .then(r => {
@@ -45,9 +70,14 @@ class CreatePersonForm extends React.Component {
     render() {
         return (
        <div className="bg-light d-flex justify-content-center m-2"> 
+        
+        
+
         <form onSubmit={ev => 
-            { ev.preventDefault(); this.props.handleSubmit(this.state.person) }}
+            { ev.preventDefault(); this.checkPerson();  }}
             className="create-person-form"> 
+
+            { this.state.showWarning ? <p className="form-text text-warning">{this.state.warning}</p> : null } 
 
             <div className="form-group">
                 <label for="FirstName">Firstname:</label>
@@ -68,14 +98,14 @@ class CreatePersonForm extends React.Component {
                 <label for="PhoneNr">Phone:</label>
                 <input className="form-control" value={this.state.person.PhoneNr} onChange={event => {
                     this.setState({ person: {...this.state.person, PhoneNr: event.target.value}})}}
-                    type="text" id="PhoneNr"/>
+                    type="tel" id="PhoneNr" required/>
             </div>
 
             <div className="form-group">
                 <label for="SSN">SSN:</label>
                 <input className="form-control" value={this.state.person.SocialSecurityNr} onChange={event => {
                     this.setState({ person: {...this.state.person, SocialSecurityNr: event.target.value}})}}
-                type="text" id="SSN"/>
+                type="number" id="SSN" required/>
             </div>
 
             <div className="form-group">
@@ -83,7 +113,7 @@ class CreatePersonForm extends React.Component {
                 <select className="form-control" id="city" name="cities" type="text"
                 defaultValue={0} onChange={event => { 
                     this.setState({person: {...this.state.person, CityId: parseInt(event.target.value)}})}} 
-                >
+                    required>
                     {
                     this.state.cities.map(c => <option value={c.id} key={c.name}>{c.name}</option>  ) 
                     }
@@ -95,13 +125,13 @@ class CreatePersonForm extends React.Component {
                 <select className="form-control" multiple={true} name="languages" type="text"
                 defaultValue={[]} onChange={event => { 
                     this.setState({person: {...this.state.person, LanguageIds: [...this.state.person.LanguageIds, parseInt(event.target.value)]}})}} 
-                id="languages">
+                id="languages" required>
                 {
                     this.state.languages.map(l => <option value={l.id} key={l.id}>{l.languageName}</option>  ) 
                 }
                 </select>
             </div>
-              
+            
             <button className="mt-3 ml-5 btn btn-primary">Create</button>
 
         </form>
@@ -142,10 +172,12 @@ function Person({person, deletePersonFunction}){
     const [showDetails, setShowDetails] = React.useState(false); 
     
     return (
+
         <tr>
+           
             <td colspan={showDetails ? 1 : 2}>{person.firstName}</td>
-            <td colspan={showDetails ? 1 : 2}>{person.lastName}</td>
-        
+            <td colspan={showDetails ? 1 : 2}>{person.lastName}</td> )
+                    :
             <CSSTransition
                 in={showDetails}
                 timeout={500}
@@ -165,7 +197,7 @@ function Person({person, deletePersonFunction}){
             </td>
     
             </CSSTransition>
-           
+            
         </tr>
     )
 }
@@ -206,8 +238,6 @@ export default class People extends React.Component {
     addNewPerson = (person) => {
 
         let json = JSON.stringify(person)
-
-        console.log(json);
 
         axios.post(`${url}/people`, json,
         { headers: {
