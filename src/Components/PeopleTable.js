@@ -11,22 +11,34 @@ class CreatePersonForm extends React.Component {
             CityId: 0,
             PhoneNr: '',
             SocialSecurityNr: '',
-            LanguageIds: [1]
+            LanguageIds: []
         },
         countries: [],
-        cities: []
+        cities: [],
+        languages: []
     }
     
-    componentDidMount(){
-        axios.get(`${url}/countries`)
+    async componentDidMount(){
+        await axios.get(`${url}/countries`)
         .then(r => {
+
             this.setState({ countries: r.data.countries });
-            this.setState({ cities: r.data.countries.flatMap(c => c.cities)})
-            this.setState(({person: {...this.state.person, CityId: r.data.countries[0].cities[0].id}}))
+        }).then(() => {
+            this.setState({ cities: this.state.countries.flatMap(c => c.cities)})
+        })
+        .then(() => {
+            this.setState(({person: {...this.state.person, CityId: this.state.cities[0].id}}))
         })
         .catch(e => {
             console.log(e)
         });
+
+        await axios.get(`${url}/languages`)
+            .then(r => {
+                this.setState({ languages: r.data.languages})
+            }).catch(e => {
+                console.log(e);
+            })
     }
     render() {
         return (<form onSubmit={ev => 
@@ -52,6 +64,14 @@ class CreatePersonForm extends React.Component {
                     this.state.cities.map(c => <option value={c.id} key={c.name}>{c.name}</option>  ) 
                     }
                 </select>
+                <select multiple={true} id="languages" name="languages" type="text"
+                defaultValue={[]} onChange={event => { 
+                    this.setState({person: {...this.state.person, LanguageIds: [...this.state.person.LanguageIds, parseInt(event.target.value)]}})}} 
+                >
+                    {
+                    this.state.languages.map(l => <option value={l.id} key={l.id}>{l.languageName}</option>  ) 
+                    }
+                </select>
               
                 <button>Create person</button>
         </form>)
@@ -62,7 +82,8 @@ const PersonDetails = ({person, deletePersonFunction}) => {
  return (
      <div>
         {person.city.name}
-    
+        {person.socialSecurityNr}
+        {person.phoneNr}
          <button onClick={() => deletePersonFunction(person)}>DELETE</button>
      
      </div>
@@ -133,6 +154,9 @@ export default class People extends React.Component {
     addNewPerson = (person) => {
 
         let json = JSON.stringify(person)
+
+        console.log(json);
+
         axios.post(`${url}/people`, json,
         { headers: {
             'Content-Type': 'application/json'
@@ -141,6 +165,9 @@ export default class People extends React.Component {
         )
         .then(r => {
             this.setState(oldState => ({ people: [...oldState.people, r.data]}))
+        })
+        .then(() => {
+            this.setState({showCreateForm: false})
         })
         .catch(e => {
             console.log(e)
