@@ -1,11 +1,11 @@
 import './App.css';
-import PeopleTable from './Components/PeopleTable';
+import People from './Components/People';
 
 function App() {
 
   return (
     <div className="App">
-      <PeopleTable/>
+      <People/>
     </div>
   );
 }
