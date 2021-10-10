@@ -3,7 +3,7 @@ import axios from 'axios';
 import Table from './PeopleTable';
 import CreatePersonForm from './CreatePersonForm.js'
 
-const url = process.env.REACT_APP_PEOPLE_URL;
+const url = process.env.NODE_ENV === 'production' ?  process.env.REACT_APP_LOCAL_URL : process.env.REACT_APP_PEOPLE_URL;
 
 export default class People extends React.Component {
     state = {
