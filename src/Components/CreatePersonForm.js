@@ -1,7 +1,7 @@
 import axios from 'axios';
 import React from 'react';
 
-const url = "https://localhost:44350/react"
+const url = process.env.REACT_APP_PEOPLE_URL;
 
 export default class CreatePersonForm extends React.Component {
     state = {

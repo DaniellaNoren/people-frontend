@@ -3,7 +3,7 @@ import axios from 'axios';
 import Table from './PeopleTable';
 import CreatePersonForm from './CreatePersonForm.js'
 
-const url = "https://localhost:44350/react";
+const url = process.env.REACT_APP_PEOPLE_URL;
 
 export default class People extends React.Component {
     state = {
